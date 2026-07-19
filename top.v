@@ -1,85 +1,108 @@
+```verilog 
 `timescale 1ns / 1ps
 
 module top(
-input clk, reset
-    );
- 
- 
- wire jump;  
- wire lui_control;
- wire [31:0]imm_val_top;  
- 
- 
- wire [31:0]pc, current_pc; 
- wire branch_control;
- wire [31:0]jump_addr; 
- // instruction fetch stage    
- instruction_fetch_unit ifu ( //input
-                              clk,
-                              reset,
-                              jump_addr,//imm_val_jump
-                              imm_val_top,//imm_val_branch
-                              branch_control, 
-                              jump,
-                              //output
-                              pc, 
-                              current_pc );   
- 
- wire [31:0]instruction_code; 
- 
- //instruction memory which stores instructions in binary format
- instruction_memory imu ( //input
-                          clk, 
-                          reset,
-                          pc,
-                          //output
-                          instruction_code );
- 
- wire [5:0]alu_control;
- wire mem_read, mem_write;
- wire branch;
- 
- //control unit 
- control_unit  cu( //input
-                   reset, 
-                   instruction_code[31:25], //func7
-                   instruction_code[14:12], //func3
-                   instruction_code[6:0],   //opcode
-                   //output
-                   alu_control,
-                   mem_read, 
-                   mem_write,
-                   branch,
-                   jump,  
-                   lui_control );
-               
- //Data Path Unit
- data_path_unit  dpu( //input
-                      clk, 
-                      reset,
-                      pc,
-                      instruction_code[19:15],//read_reg_num1 
-                      instruction_code[24:20],//read_reg_num2
-                      instruction_code[11:7], //write_reg_num1
-                      alu_control,
-                      imm_val_top,
-                      instruction_code[24:20],//shamt - shift amount
-                      jump, 
-                      branch,
-                      mem_read, 
-                      mem_write, 
-                      lui_control,
-                      current_pc,
-                      //output
-                      jump_addr,
-                      branch_control );              
-    
-    //Immediate value generator
-    imm_val_generator imm_value(// input 
-                                reset,
-                                instruction_code,
-                                //output
-                                imm_val_top
-    );
-    
-    endmodule
+    input clk,
+    input reset
+);
+
+//====================================================
+// Internal Signals
+//====================================================
+
+// Control Signals
+wire        jump;
+wire        branch;
+wire        branch_control;
+wire        mem_read;
+wire        mem_write;
+wire        lui_control;
+
+// Datapath Signals
+wire [5:0]  alu_control;
+wire [31:0] imm_val_top;
+
+wire [31:0] pc;
+wire [31:0] current_pc;
+wire [31:0] jump_addr;
+wire [31:0] instruction_code;
+
+//====================================================
+// Instruction Fetch Unit
+//====================================================
+instruction_fetch_unit ifu(
+    clk,
+    reset,
+    jump_addr,
+    imm_val_top,
+    branch_control,
+    jump,
+    pc,
+    current_pc
+);
+
+//====================================================
+// Instruction Memory
+//====================================================
+instruction_memory imu(
+    clk,
+    reset,
+    pc,
+    instruction_code
+);
+
+//====================================================
+// Control Unit
+//====================================================
+control_unit cu(
+    reset,
+    instruction_code[31:25],   // func7
+    instruction_code[14:12],   // func3
+    instruction_code[6:0],     // opcode
+
+    alu_control,
+    mem_read,
+    mem_write,
+    branch,
+    jump,
+    lui_control
+);
+
+//====================================================
+// Immediate Value Generator
+//====================================================
+imm_val_generator imm_value(
+    reset,
+    instruction_code,
+    imm_val_top
+);
+
+//====================================================
+// Datapath Unit
+//====================================================
+data_path_unit dpu(
+    clk,
+    reset,
+    pc,
+    instruction_code[19:15],   // rs1
+    instruction_code[24:20],   // rs2
+    instruction_code[11:7],    // rd
+
+    alu_control,
+    imm_val_top,
+    instruction_code[24:20],   // shamt
+
+    jump,
+    branch,
+    mem_read,
+    mem_write,
+    lui_control,
+
+    current_pc,
+
+    jump_addr,
+    branch_control
+);
+
+endmodule
+```

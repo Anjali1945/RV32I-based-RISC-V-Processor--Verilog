@@ -2,7 +2,6 @@
 
 `timescale 1ns / 1ps
 
-
 module instruction_memory(
 input clk, reset,
 input [31:0]pc,
